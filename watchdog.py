@@ -4,9 +4,13 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import os
 
+# Monkey patch for eventlet (must be before other imports)
+import eventlet
+eventlet.monkey_patch()
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 mqtt_client = None
 
