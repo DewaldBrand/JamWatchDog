@@ -169,6 +169,9 @@ def check_site_status():
     # Emit update to all clients
     socketio.emit('site_status_update', {'sites': site_statuses}, namespace='/')
 
+    # Clear messages table on web interface
+    socketio.emit('clear_messages', namespace='/')
+
     # Clear current minute tracking
     current_minute_messages = {site_id: set() for site_id in sites_data.keys()}
     print(f"[CHECK] Minute reset - tracking cleared for next cycle")

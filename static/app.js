@@ -30,6 +30,14 @@ socket.on('site_status_update', (data) => {
     updateSiteMonitoring(data.sites);
 });
 
+socket.on('clear_messages', () => {
+    const tbody = document.getElementById('messages-body');
+    tbody.innerHTML = '';
+    messageCount = 0;
+    updateMessageCount();
+    console.log('Messages table cleared automatically');
+});
+
 socket.on('connect_response', (data) => {
     if (data.success) {
         showNotification('Connected to MQTT broker', 'success');
