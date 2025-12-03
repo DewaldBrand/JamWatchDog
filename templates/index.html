@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Message Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MQTT Message Monitor</h1>
+            <div class="status-bar">
+                <span id="status-indicator" class="status disconnected">Disconnected</span>
+            </div>
+        </header>
+
+        <div class="control-panel">
+            <div class="button-group">
+                <button type="button" id="connect-btn" class="btn btn-primary">Connect</button>
+                <button type="button" id="disconnect-btn" class="btn btn-secondary">Disconnect</button>
+                <button type="button" id="clear-btn" class="btn btn-warning">Clear Messages</button>
+            </div>
+        </div>
+
+        <div class="messages-panel">
+            <h2>Messages <span id="message-count">(0)</span></h2>
+            <div class="table-container">
+                <table id="messages-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Topic</th>
+                            <th>Payload</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messages-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

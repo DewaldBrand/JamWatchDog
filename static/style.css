@@ -1,0 +1,230 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+}
+
+.status {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.status::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+.status.connected {
+    background: rgba(52, 211, 153, 0.2);
+    color: #10b981;
+}
+
+.status.connected::before {
+    background: #10b981;
+}
+
+.status.disconnected {
+    background: rgba(248, 113, 113, 0.2);
+    color: #ef4444;
+}
+
+.status.disconnected::before {
+    background: #ef4444;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.control-panel {
+    padding: 20px 30px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.messages-panel {
+    padding: 30px;
+}
+
+.messages-panel h2 {
+    margin-bottom: 20px;
+    color: #1f2937;
+    font-size: 20px;
+}
+
+#message-count {
+    color: #6b7280;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+.table-container {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f3f4f6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s;
+}
+
+tbody tr:hover {
+    background: #f9fafb;
+}
+
+tbody tr.new-message {
+    animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+    0% {
+        background: #dbeafe;
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+tbody td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #1f2937;
+    word-break: break-word;
+}
+
+tbody td:first-child {
+    font-family: 'Courier New', monospace;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+tbody td:nth-child(2) {
+    font-weight: 500;
+    color: #667eea;
+}
+
+#messages-body:empty::after {
+    content: 'No messages received yet. Configure and connect to an MQTT broker to start receiving messages.';
+    display: block;
+    padding: 40px;
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+}
