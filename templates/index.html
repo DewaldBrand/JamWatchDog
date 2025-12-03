@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>MQTT Message Monitor <span class="version">v2.1</span></h1>
+            <h1>MQTT Message Monitor <span class="version">v2.2</span></h1>
             <div class="status-bar">
                 <span id="status-indicator" class="status disconnected">Disconnected</span>
             </div>
@@ -25,9 +25,29 @@
         </div>
 
         <div class="sites-panel">
-            <h2>Site Monitoring</h2>
-            <div id="sites-container" class="sites-grid">
-                <p class="no-sites">No sites detected yet. Waiting for MQTT messages...</p>
+            <div class="sites-header">
+                <h2>Site Monitoring</h2>
+                <div class="countdown-timer">
+                    Next check in: <span id="countdown">60</span>s
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="sites-table">
+                    <thead>
+                        <tr>
+                            <th>Site ID</th>
+                            <th>Status</th>
+                            <th>Devices</th>
+                            <th>Received</th>
+                            <th>Missing</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sites-body">
+                        <tr>
+                            <td colspan="5" class="no-sites">No sites detected yet. Waiting for MQTT messages...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

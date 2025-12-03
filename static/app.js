@@ -1,6 +1,8 @@
 const socket = io();
 
 let messageCount = 0;
+let countdownValue = 60;
+let countdownInterval = null;
 
 socket.on('connect', () => {
     console.log('Connected to server');
@@ -111,54 +113,73 @@ function updateMessageCount() {
 }
 
 function updateSiteMonitoring(sites) {
-    const container = document.getElementById('sites-container');
+    const tbody = document.getElementById('sites-body');
 
     if (!sites || sites.length === 0) {
-        container.innerHTML = '<p class="no-sites">No sites detected yet. Waiting for MQTT messages...</p>';
+        tbody.innerHTML = '<tr><td colspan="5" class="no-sites">No sites detected yet. Waiting for MQTT messages...</td></tr>';
         return;
     }
 
-    container.innerHTML = '';
+    // Reset countdown when update received
+    resetCountdown();
+
+    tbody.innerHTML = '';
+
+    const alertLabels = ['ALL OK', 'ALERT 1', 'ALERT 2', 'ALERT 3'];
 
     sites.forEach(site => {
-        const card = document.createElement('div');
-        card.className = 'site-card';
-        card.style.borderColor = site.color;
-        card.style.background = site.color;
+        const row = document.createElement('tr');
+        row.className = 'site-row';
+        row.style.borderLeftColor = site.color;
 
-        const alertLabels = ['ALL OK', 'ALERT 1', 'ALERT 2', 'ALERT 3'];
         const alertLabel = alertLabels[site.alert_level];
 
-        let devicesHTML = '';
-        if (site.received.length > 0) {
-            devicesHTML += '<div class="device-list">';
-            devicesHTML += '<p><strong>Received:</strong></p>';
-            site.received.forEach(dev => {
-                devicesHTML += `<p class="device-received">✓ ${dev}</p>`;
-            });
-            if (site.missing.length > 0) {
-                devicesHTML += '<p><strong>Missing:</strong></p>';
-                site.missing.forEach(dev => {
-                    devicesHTML += `<p class="device-missing">✗ ${dev}</p>`;
-                });
-            }
-            devicesHTML += '</div>';
-        }
+        // Received devices
+        let receivedHTML = '';
+        site.received.forEach(dev => {
+            receivedHTML += `<span class="device-item device-received">✓ ${dev}</span>`;
+        });
 
-        card.innerHTML = `
-            <div class="site-card-header">
-                <div class="site-id">Site ${site.site_id}</div>
-                <div class="alert-badge">${alertLabel}</div>
-            </div>
-            <div class="site-details">
-                <p><strong>${site.total_received}/${site.total_expected}</strong> devices reporting</p>
-                ${devicesHTML}
-            </div>
+        // Missing devices
+        let missingHTML = '';
+        site.missing.forEach(dev => {
+            missingHTML += `<span class="device-item device-missing">✗ ${dev}</span>`;
+        });
+
+        row.innerHTML = `
+            <td><strong>${site.site_id}</strong></td>
+            <td><span class="site-status-badge" style="background: ${site.color}">${alertLabel}</span></td>
+            <td class="device-count">${site.total_received}/${site.total_expected}</td>
+            <td class="device-list-cell">${receivedHTML || '-'}</td>
+            <td class="device-list-cell">${missingHTML || '-'}</td>
         `;
 
-        container.appendChild(card);
+        tbody.appendChild(row);
     });
 }
+
+function startCountdown() {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+
+    countdownInterval = setInterval(() => {
+        countdownValue--;
+        document.getElementById('countdown').textContent = countdownValue;
+
+        if (countdownValue <= 0) {
+            countdownValue = 60;
+        }
+    }, 1000);
+}
+
+function resetCountdown() {
+    countdownValue = 60;
+    document.getElementById('countdown').textContent = countdownValue;
+}
+
+// Start countdown on page load
+startCountdown();
 
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');

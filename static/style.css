@@ -148,75 +148,77 @@ header h1 .version {
     background: #fff;
 }
 
-.sites-panel h2 {
-    margin-bottom: 20px;
-    color: #1f2937;
-    font-size: 20px;
-}
-
-.sites-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.site-card {
-    border: 2px solid;
-    border-radius: 8px;
-    padding: 20px;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.site-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.site-card-header {
+.sites-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-.site-id {
-    font-size: 24px;
-    font-weight: 700;
-    color: white;
-}
-
-.alert-badge {
-    background: white;
+.sites-panel h2 {
     color: #1f2937;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+    font-size: 20px;
+    margin: 0;
+}
+
+.countdown-timer {
+    background: #667eea;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 600;
 }
 
-.site-details {
+.countdown-timer #countdown {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#sites-table tbody tr {
+    transition: all 0.3s;
+}
+
+#sites-table tbody tr.site-row {
+    border-left: 4px solid;
+}
+
+#sites-table tbody tr.site-row:hover {
+    background: #f9fafb;
+}
+
+.site-status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
     color: white;
-    font-size: 14px;
 }
 
-.device-list {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
+.device-count {
+    font-weight: 600;
+    font-size: 16px;
 }
 
-.device-list p {
-    margin: 5px 0;
+.device-list-cell {
     font-size: 13px;
 }
 
-.device-received {
-    color: rgba(255, 255, 255, 0.95);
+.device-list-cell .device-item {
+    display: inline-block;
+    margin: 2px 4px;
+    padding: 3px 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
 }
 
-.device-missing {
-    color: rgba(255, 255, 255, 0.7);
+.device-list-cell .device-received {
+    color: #10b981;
+}
+
+.device-list-cell .device-missing {
+    color: #ef4444;
     text-decoration: line-through;
 }
 
@@ -225,7 +227,6 @@ header h1 .version {
     color: #9ca3af;
     font-style: italic;
     padding: 40px;
-    grid-column: 1 / -1;
 }
 
 .messages-panel {
