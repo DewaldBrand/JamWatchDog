@@ -26,10 +26,10 @@ def on_connect(client, _userdata, _flags, rc):
     if rc == 0:
         print(f"Connected to MQTT Broker at {mqtt_config['broker']}:{mqtt_config['port']}")
         client.subscribe(mqtt_config['topic'])
-        socketio.emit('mqtt_status', {'status': 'connected', 'broker': mqtt_config['broker']})
+        socketio.emit('mqtt_status', {'status': 'connected', 'broker': mqtt_config['broker'], 'topic': mqtt_config['topic']}, broadcast=True)
     else:
         print(f"Failed to connect, return code {rc}")
-        socketio.emit('mqtt_status', {'status': 'disconnected', 'error': f'Connection failed: {rc}'})
+        socketio.emit('mqtt_status', {'status': 'disconnected', 'error': f'Connection failed: {rc}'}, broadcast=True)
 
 def on_message(_client, _userdata, msg):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
@@ -44,12 +44,12 @@ def on_message(_client, _userdata, msg):
         'payload': payload
     }
 
-    socketio.emit('mqtt_message', message_data)
+    socketio.emit('mqtt_message', message_data, broadcast=True)
     print(f"[{timestamp}] Topic: {msg.topic} | Payload: {payload}")
 
 def on_disconnect(_client, _userdata, _rc):
     print("Disconnected from MQTT Broker")
-    socketio.emit('mqtt_status', {'status': 'disconnected'})
+    socketio.emit('mqtt_status', {'status': 'disconnected'}, broadcast=True)
 
 def connect_mqtt():
     global mqtt_client
