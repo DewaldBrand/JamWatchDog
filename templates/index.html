@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>MQTT Message Monitor <span class="version">v1.6</span></h1>
+            <h1>MQTT Message Monitor <span class="version">v2.0</span></h1>
             <div class="status-bar">
                 <span id="status-indicator" class="status disconnected">Disconnected</span>
             </div>
@@ -21,6 +21,13 @@
                 <button type="button" id="connect-btn" class="btn btn-primary">Connect</button>
                 <button type="button" id="disconnect-btn" class="btn btn-secondary">Disconnect</button>
                 <button type="button" id="clear-btn" class="btn btn-warning">Clear Messages</button>
+            </div>
+        </div>
+
+        <div class="sites-panel">
+            <h2>Site Monitoring</h2>
+            <div id="sites-container" class="sites-grid">
+                <p class="no-sites">No sites detected yet. Waiting for MQTT messages...</p>
             </div>
         </div>
 

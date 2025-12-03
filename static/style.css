@@ -142,6 +142,92 @@ header h1 .version {
     background: #d97706;
 }
 
+.sites-panel {
+    padding: 30px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.sites-panel h2 {
+    margin-bottom: 20px;
+    color: #1f2937;
+    font-size: 20px;
+}
+
+.sites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.site-card {
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.site-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.site-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.site-id {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.alert-badge {
+    background: white;
+    color: #1f2937;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.site-details {
+    color: white;
+    font-size: 14px;
+}
+
+.device-list {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.device-list p {
+    margin: 5px 0;
+    font-size: 13px;
+}
+
+.device-received {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.device-missing {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: line-through;
+}
+
+.no-sites {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 40px;
+    grid-column: 1 / -1;
+}
+
 .messages-panel {
     padding: 30px;
 }

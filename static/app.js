@@ -24,6 +24,10 @@ socket.on('mqtt_message', (data) => {
     addMessage(data);
 });
 
+socket.on('site_status_update', (data) => {
+    updateSiteMonitoring(data.sites);
+});
+
 socket.on('connect_response', (data) => {
     if (data.success) {
         showNotification('Connected to MQTT broker', 'success');
@@ -104,6 +108,56 @@ function addMessage(data) {
 
 function updateMessageCount() {
     document.getElementById('message-count').textContent = `(${messageCount})`;
+}
+
+function updateSiteMonitoring(sites) {
+    const container = document.getElementById('sites-container');
+
+    if (!sites || sites.length === 0) {
+        container.innerHTML = '<p class="no-sites">No sites detected yet. Waiting for MQTT messages...</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    sites.forEach(site => {
+        const card = document.createElement('div');
+        card.className = 'site-card';
+        card.style.borderColor = site.color;
+        card.style.background = site.color;
+
+        const alertLabels = ['ALL OK', 'ALERT 1', 'ALERT 2', 'ALERT 3'];
+        const alertLabel = alertLabels[site.alert_level];
+
+        let devicesHTML = '';
+        if (site.received.length > 0) {
+            devicesHTML += '<div class="device-list">';
+            devicesHTML += '<p><strong>Received:</strong></p>';
+            site.received.forEach(dev => {
+                devicesHTML += `<p class="device-received">✓ ${dev}</p>`;
+            });
+            if (site.missing.length > 0) {
+                devicesHTML += '<p><strong>Missing:</strong></p>';
+                site.missing.forEach(dev => {
+                    devicesHTML += `<p class="device-missing">✗ ${dev}</p>`;
+                });
+            }
+            devicesHTML += '</div>';
+        }
+
+        card.innerHTML = `
+            <div class="site-card-header">
+                <div class="site-id">Site ${site.site_id}</div>
+                <div class="alert-badge">${alertLabel}</div>
+            </div>
+            <div class="site-details">
+                <p><strong>${site.total_received}/${site.total_expected}</strong> devices reporting</p>
+                ${devicesHTML}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
 }
 
 function showNotification(message, type = 'info') {

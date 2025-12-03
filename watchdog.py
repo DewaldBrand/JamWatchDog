@@ -30,6 +30,14 @@ mqtt_config = {
     'username': '',               # MQTT username (leave empty if not required)
     'password': ''                # MQTT password (leave empty if not required)
 }
+
+# Monitoring configuration
+EXPECTED_DEVICES_PER_SITE = ['GSM-1', 'GSM-2', 'ESP']  # Expected devices per site
+CHECK_INTERVAL = 60  # Check every 60 seconds
+
+# Site monitoring data
+sites_data = {}  # Format: {site_id: {device_name: {'last_seen': timestamp, 'count': int}}}
+current_minute_messages = {}  # Track messages received in current minute
 # =============================================================================
 
 def on_connect(client, _userdata, _flags, rc):
@@ -54,12 +62,89 @@ def on_message(_client, _userdata, msg):
         'payload': payload
     }
 
+    # Parse payload for site monitoring (format: site_id/device_name)
+    try:
+        parts = payload.split('/')
+        if len(parts) == 2:
+            site_id, device_name = parts
+
+            # Initialize site if not exists
+            if site_id not in sites_data:
+                sites_data[site_id] = {}
+                current_minute_messages[site_id] = set()
+
+            # Update device last seen
+            sites_data[site_id][device_name] = {
+                'last_seen': datetime.now(),
+                'timestamp': timestamp
+            }
+
+            # Track for current minute analysis
+            current_minute_messages[site_id].add(device_name)
+
+            print(f"[{timestamp}] Site: {site_id} | Device: {device_name}")
+    except Exception as e:
+        print(f"Error parsing payload: {e}")
+
     socketio.emit('mqtt_message', message_data, namespace='/')
     print(f"[{timestamp}] Topic: {msg.topic} | Payload: {payload}")
 
 def on_disconnect(_client, _userdata, _rc):
     print("Disconnected from MQTT Broker")
     socketio.emit('mqtt_status', {'status': 'disconnected'}, namespace='/')
+
+def check_site_status():
+    """Check each site's status and calculate alert levels"""
+    global current_minute_messages
+
+    site_statuses = []
+
+    for site_id in sites_data.keys():
+        received_devices = current_minute_messages.get(site_id, set())
+        expected_devices = set(EXPECTED_DEVICES_PER_SITE)
+
+        missing_devices = expected_devices - received_devices
+        missed_count = len(missing_devices)
+
+        # Calculate alert level (0 = all good, 1-3 = missed messages)
+        alert_level = min(missed_count, 3)
+
+        # Color coding based on alert level
+        colors = ['#10b981', '#f59e0b', '#ef4444', '#7f1d1d']  # green, orange, red, dark red
+        color = colors[alert_level]
+
+        site_status = {
+            'site_id': site_id,
+            'alert_level': alert_level,
+            'color': color,
+            'received': list(received_devices),
+            'missing': list(missing_devices),
+            'total_expected': len(expected_devices),
+            'total_received': len(received_devices)
+        }
+
+        site_statuses.append(site_status)
+        print(f"Site {site_id}: Alert Level {alert_level}, Received: {len(received_devices)}/3")
+
+    # Emit update to all clients
+    socketio.emit('site_status_update', {'sites': site_statuses}, namespace='/')
+
+    # Clear current minute tracking
+    current_minute_messages = {site_id: set() for site_id in sites_data.keys()}
+
+def start_monitoring_scheduler():
+    """Start the periodic monitoring check"""
+    import threading
+    import time
+
+    def run_scheduler():
+        while True:
+            time.sleep(CHECK_INTERVAL)
+            check_site_status()
+
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+    print(f"Monitoring scheduler started (checking every {CHECK_INTERVAL}s)")
 
 def connect_mqtt():
     global mqtt_client
@@ -125,6 +210,9 @@ if __name__ == '__main__':
     print(f"Connecting to broker: {mqtt_config['broker']}:{mqtt_config['port']}")
     print(f"Subscribing to topic: {mqtt_config['topic']}")
     connect_mqtt()
+
+    # Start monitoring scheduler
+    start_monitoring_scheduler()
 
     # Get port from environment or default to 5000 (Railway compatibility)
     port = int(os.environ.get('PORT', 5000))
