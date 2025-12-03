@@ -116,27 +116,31 @@ def on_message(_client, _userdata, msg):
         if len(parts) == 2:
             site_id, device_name = parts
 
-            # Initialize site if not exists
-            is_new_site = site_id not in sites_data
-            if is_new_site:
-                sites_data[site_id] = {}
-                current_minute_messages[site_id] = set()
-                print(f"NEW SITE DETECTED: {site_id}")
+            # Only process messages from active sites
+            if not is_site_active(site_id):
+                print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | IGNORED (site inactive)")
+            else:
+                # Initialize site if not exists
+                is_new_site = site_id not in sites_data
+                if is_new_site:
+                    sites_data[site_id] = {}
+                    current_minute_messages[site_id] = set()
+                    print(f"NEW SITE DETECTED: {site_id}")
 
-            # Update device last seen
-            sites_data[site_id][device_name] = {
-                'last_seen': datetime.now(),
-                'timestamp': timestamp
-            }
+                # Update device last seen
+                sites_data[site_id][device_name] = {
+                    'last_seen': datetime.now(),
+                    'timestamp': timestamp
+                }
 
-            # Track for current minute analysis
-            current_minute_messages[site_id].add(device_name)
+                # Track for current minute analysis
+                current_minute_messages[site_id].add(device_name)
 
-            print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | Current minute: {current_minute_messages[site_id]}")
+                print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | Current minute: {current_minute_messages[site_id]}")
 
-            # Send immediate status update for new sites
-            if is_new_site:
-                send_current_status()
+                # Send immediate status update for new sites
+                if is_new_site:
+                    send_current_status()
     except Exception as e:
         print(f"Error parsing payload: {e}")
 
