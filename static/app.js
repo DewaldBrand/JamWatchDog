@@ -38,6 +38,10 @@ socket.on('clear_messages', () => {
     console.log('Messages table cleared automatically');
 });
 
+socket.on('unconfigured_sites_update', (data) => {
+    updateUnconfiguredSites(data.sites);
+});
+
 socket.on('connect_response', (data) => {
     if (data.success) {
         showNotification('Connected to MQTT broker', 'success');
@@ -184,6 +188,50 @@ function startCountdown() {
 function resetCountdown() {
     countdownValue = 60;
     document.getElementById('countdown').textContent = countdownValue;
+}
+
+function updateUnconfiguredSites(sites) {
+    const panel = document.getElementById('unconfigured-panel');
+    const tbody = document.getElementById('unconfigured-body');
+    const countBadge = document.getElementById('orphan-count');
+
+    if (!sites || sites.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    panel.style.display = 'block';
+    countBadge.textContent = sites.length;
+    tbody.innerHTML = '';
+
+    sites.forEach(site => {
+        const row = document.createElement('tr');
+
+        // Device list
+        const deviceTags = site.devices.map(dev =>
+            `<span class="device-tag">${dev}</span>`
+        ).join('');
+
+        row.innerHTML = `
+            <td><strong>${site.site_id}</strong></td>
+            <td><div class="device-list">${deviceTags}</div></td>
+            <td style="text-align: center;">${site.device_count}</td>
+            <td>${site.first_seen}</td>
+            <td>${site.last_seen}</td>
+            <td>
+                <button class="btn-configure" onclick="configureOrphanSite('${site.site_id}', ${JSON.stringify(site.devices).replace(/"/g, '&quot;')})">
+                    Configure
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+function configureOrphanSite(siteId, devices) {
+    // Redirect to config page with site ID pre-filled
+    window.location.href = `/config?add=${siteId}&devices=${devices.join(',')}`;
 }
 
 // Start countdown on page load

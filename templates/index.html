@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>MQTT Message Monitor <span class="version">v3.0</span></h1>
+            <h1>MQTT Message Monitor <span class="version">v3.1</span></h1>
             <div class="header-right">
                 <a href="/config" class="btn btn-config">⚙️ Site Config</a>
                 <div class="status-bar">
@@ -29,7 +29,7 @@
 
         <div class="sites-panel">
             <div class="sites-header">
-                <h2>Site Monitoring</h2>
+                <h2>Site Monitoring (Active)</h2>
                 <div class="countdown-timer">
                     Next check in: <span id="countdown">60</span>s
                 </div>
@@ -49,6 +49,29 @@
                         <tr>
                             <td colspan="5" class="no-sites">No sites detected yet. Waiting for MQTT messages...</td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="unconfigured-panel" id="unconfigured-panel" style="display: none;">
+            <div class="unconfigured-header">
+                <h2>⚠️ Unconfigured Sites (Orphans)</h2>
+                <span class="orphan-count" id="orphan-count">0</span>
+            </div>
+            <div class="table-container">
+                <table id="unconfigured-table">
+                    <thead>
+                        <tr>
+                            <th>Site ID</th>
+                            <th>Devices Seen</th>
+                            <th>Device Count</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unconfigured-body">
                     </tbody>
                 </table>
             </div>

@@ -39,6 +39,7 @@ CHECK_INTERVAL = 60  # Check every 60 seconds
 # Site monitoring data
 sites_data = {}  # Format: {site_id: {device_name: {'last_seen': timestamp, 'count': int}}}
 current_minute_messages = {}  # Track messages received in current minute
+unconfigured_sites = {}  # Track orphan sites: {site_id: {'devices': set(), 'first_seen': timestamp, 'last_seen': timestamp}}
 
 # Configuration file path
 CONFIG_FILE = 'site_config.json'
@@ -115,11 +116,47 @@ def on_message(_client, _userdata, msg):
         parts = payload.split('/')
         if len(parts) == 2:
             site_id, device_name = parts
+            now = datetime.now()
 
-            # Only process messages from active sites
-            if not is_site_active(site_id):
+            # Check if site is configured
+            config = get_site_config(site_id)
+
+            if config is None:
+                # Track unconfigured (orphan) site
+                if site_id not in unconfigured_sites:
+                    unconfigured_sites[site_id] = {
+                        'devices': set(),
+                        'first_seen': now,
+                        'last_seen': now
+                    }
+                    print(f"[ORPHAN] NEW unconfigured site detected: {site_id}")
+
+                unconfigured_sites[site_id]['devices'].add(device_name)
+                unconfigured_sites[site_id]['last_seen'] = now
+
+                # Emit unconfigured sites update
+                socketio.emit('unconfigured_sites_update', {
+                    'sites': [{
+                        'site_id': sid,
+                        'devices': list(data['devices']),
+                        'device_count': len(data['devices']),
+                        'first_seen': data['first_seen'].strftime('%Y-%m-%d %H:%M:%S'),
+                        'last_seen': data['last_seen'].strftime('%Y-%m-%d %H:%M:%S')
+                    } for sid, data in unconfigured_sites.items()]
+                }, namespace='/')
+
+                print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | UNCONFIGURED")
+
+            elif not config.get('active', True):
+                # Site is configured but inactive
                 print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | IGNORED (site inactive)")
+
             else:
+                # Remove from unconfigured if it was there
+                if site_id in unconfigured_sites:
+                    del unconfigured_sites[site_id]
+                    print(f"[ORPHAN] Site {site_id} now configured, removed from orphan list")
+
                 # Initialize site if not exists
                 is_new_site = site_id not in sites_data
                 if is_new_site:
@@ -129,7 +166,7 @@ def on_message(_client, _userdata, msg):
 
                 # Update device last seen
                 sites_data[site_id][device_name] = {
-                    'last_seen': datetime.now(),
+                    'last_seen': now,
                     'timestamp': timestamp
                 }
 

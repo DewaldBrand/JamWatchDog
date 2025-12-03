@@ -164,7 +164,8 @@ header h1 .version {
     background: #d97706;
 }
 
-.sites-panel {
+.sites-panel,
+.unconfigured-panel {
     padding: 30px;
     border-bottom: 1px solid #e5e7eb;
     background: #fff;
@@ -195,6 +196,74 @@ header h1 .version {
 .countdown-timer #countdown {
     font-size: 18px;
     font-weight: 700;
+}
+
+/* Unconfigured Sites Styling */
+.unconfigured-panel {
+    background: #fefce8 !important;
+    border-left: 4px solid #f59e0b;
+}
+
+.unconfigured-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.unconfigured-panel h2 {
+    color: #92400e;
+    font-size: 20px;
+    margin: 0;
+}
+
+.orphan-count {
+    background: #f59e0b;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+#unconfigured-table tbody tr {
+    background: white;
+}
+
+#unconfigured-table tbody tr:hover {
+    background: #fef3c7;
+}
+
+.btn-configure {
+    background: #10b981;
+    color: white;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-configure:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.device-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.device-tag {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 #sites-table tbody tr {

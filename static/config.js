@@ -10,7 +10,41 @@ let isEditMode = false;
 // Load sites on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadSites();
+    checkForAutoAdd();
 });
+
+// Check if we should auto-open the add modal with pre-filled data
+function checkForAutoAdd() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const addSiteId = urlParams.get('add');
+    const devices = urlParams.get('devices');
+
+    if (addSiteId) {
+        // Open modal with pre-filled site ID
+        isEditMode = false;
+        document.getElementById('modal-title').textContent = 'Add New Site';
+        siteForm.reset();
+        document.getElementById('edit-site-id').value = '';
+        document.getElementById('site-id').value = addSiteId;
+        document.getElementById('site-id').disabled = false;
+        document.getElementById('site-active').checked = true;
+
+        // Check devices if provided
+        if (devices) {
+            const deviceList = devices.split(',');
+            document.querySelectorAll('.device-checkbox').forEach(cb => {
+                cb.checked = deviceList.includes(cb.value);
+            });
+        } else {
+            document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = true);
+        }
+
+        modal.classList.add('show');
+
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, '/config');
+    }
+}
 
 // Open modal for adding new site
 addSiteBtn.addEventListener('click', () => {
