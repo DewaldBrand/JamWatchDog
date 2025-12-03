@@ -4,13 +4,19 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import os
 
-# Monkey patch for eventlet (must be before other imports)
-import eventlet
-eventlet.monkey_patch()
+# Monkey patch for eventlet (production only - optional for local dev)
+try:
+    import eventlet
+    eventlet.monkey_patch()
+    async_mode = 'eventlet'
+    print("Using eventlet for WebSocket transport")
+except ImportError:
+    async_mode = 'threading'
+    print("Using threading mode (eventlet not available)")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 
 mqtt_client = None
 
@@ -20,7 +26,7 @@ mqtt_client = None
 mqtt_config = {
     'broker': '138.68.142.123',        # MQTT broker address (e.g., 'mqtt.example.com' or '192.168.1.100')
     'port': 1883,                 # MQTT broker port (default: 1883, SSL: 8883)
-    'topic': 'BRUCE-PING',                 # Topic to subscribe to (# = all topics, sensors/# = all under sensors/)
+    'topic': 'PING-WATCH',        # Topic to subscribe to (# = all topics, sensors/# = all under sensors/)
     'username': '',               # MQTT username (leave empty if not required)
     'password': ''                # MQTT password (leave empty if not required)
 }
