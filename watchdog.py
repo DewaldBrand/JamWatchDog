@@ -119,5 +119,5 @@ if __name__ == '__main__':
     # Get port from environment or default to 5000 (Railway compatibility)
     port = int(os.environ.get('PORT', 5000))
 
-    # Start the web server
-    socketio.run(app, debug=False, host='0.0.0.0', port=port)
+    # Start the web server with eventlet for production
+    socketio.run(app, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
