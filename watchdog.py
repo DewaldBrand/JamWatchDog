@@ -1,8 +1,9 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 import paho.mqtt.client as mqtt
 from datetime import datetime
 import os
+import json
 
 # Monkey patch for eventlet (production only - optional for local dev)
 try:
@@ -38,7 +39,54 @@ CHECK_INTERVAL = 60  # Check every 60 seconds
 # Site monitoring data
 sites_data = {}  # Format: {site_id: {device_name: {'last_seen': timestamp, 'count': int}}}
 current_minute_messages = {}  # Track messages received in current minute
+
+# Configuration file path
+CONFIG_FILE = 'site_config.json'
+site_configurations = {}  # Loaded from JSON file
 # =============================================================================
+
+def load_site_configurations():
+    """Load site configurations from JSON file"""
+    global site_configurations
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                data = json.load(f)
+                site_configurations = data.get('sites', {})
+                print(f"Loaded {len(site_configurations)} site configurations")
+        else:
+            site_configurations = {}
+            save_site_configurations()
+    except Exception as e:
+        print(f"Error loading site configurations: {e}")
+        site_configurations = {}
+
+def save_site_configurations():
+    """Save site configurations to JSON file"""
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump({'sites': site_configurations}, f, indent=2)
+        print(f"Saved {len(site_configurations)} site configurations")
+    except Exception as e:
+        print(f"Error saving site configurations: {e}")
+
+def get_site_config(site_id):
+    """Get configuration for a specific site"""
+    return site_configurations.get(site_id, None)
+
+def is_site_active(site_id):
+    """Check if a site is active"""
+    config = get_site_config(site_id)
+    if config is None:
+        return True  # Default to active if not configured
+    return config.get('active', True)
+
+def get_active_devices_for_site(site_id):
+    """Get list of active devices for a site"""
+    config = get_site_config(site_id)
+    if config is None:
+        return EXPECTED_DEVICES_PER_SITE  # Default to all devices
+    return config.get('active_devices', EXPECTED_DEVICES_PER_SITE)
 
 def on_connect(client, _userdata, _flags, rc):
     if rc == 0:
@@ -104,8 +152,12 @@ def send_current_status():
     site_statuses = []
 
     for site_id in sites_data.keys():
+        # Skip inactive sites
+        if not is_site_active(site_id):
+            continue
+
         received_devices = current_minute_messages.get(site_id, set())
-        expected_devices = set(EXPECTED_DEVICES_PER_SITE)
+        expected_devices = set(get_active_devices_for_site(site_id))
 
         missing_devices = expected_devices - received_devices
         missed_count = len(missing_devices)
@@ -140,8 +192,12 @@ def check_site_status():
     site_statuses = []
 
     for site_id in sites_data.keys():
+        # Skip inactive sites
+        if not is_site_active(site_id):
+            continue
+
         received_devices = current_minute_messages.get(site_id, set())
-        expected_devices = set(EXPECTED_DEVICES_PER_SITE)
+        expected_devices = set(get_active_devices_for_site(site_id))
 
         missing_devices = expected_devices - received_devices
         missed_count = len(missing_devices)
@@ -164,7 +220,7 @@ def check_site_status():
         }
 
         site_statuses.append(site_status)
-        print(f"[CHECK] Site {site_id}: Alert Level {alert_level}, Received: {len(received_devices)}/3")
+        print(f"[CHECK] Site {site_id}: Alert Level {alert_level}, Received: {len(received_devices)}/{len(expected_devices)}")
 
     # Emit update to all clients
     socketio.emit('site_status_update', {'sites': site_statuses}, namespace='/')
@@ -218,6 +274,80 @@ def connect_mqtt():
 def index():
     return render_template('index.html')
 
+@app.route('/config')
+def config_page():
+    return render_template('config.html')
+
+# API Routes for Site Configuration
+@app.route('/api/sites', methods=['GET'])
+def get_sites():
+    """Get all site configurations"""
+    return jsonify({'sites': site_configurations})
+
+@app.route('/api/sites/<site_id>', methods=['GET'])
+def get_site(site_id):
+    """Get a specific site configuration"""
+    config = get_site_config(site_id)
+    if config:
+        return jsonify(config)
+    return jsonify({'error': 'Site not found'}), 404
+
+@app.route('/api/sites', methods=['POST'])
+def create_site():
+    """Create a new site configuration"""
+    data = request.json
+    site_id = data.get('site_id')
+
+    if not site_id:
+        return jsonify({'error': 'site_id is required'}), 400
+
+    if site_id in site_configurations:
+        return jsonify({'error': 'Site already exists'}), 409
+
+    site_configurations[site_id] = {
+        'site_name': data.get('site_name', ''),
+        'location': data.get('location', ''),
+        'responsible_person': data.get('responsible_person', ''),
+        'contact_email': data.get('contact_email', ''),
+        'contact_phone': data.get('contact_phone', ''),
+        'active': data.get('active', True),
+        'active_devices': data.get('active_devices', EXPECTED_DEVICES_PER_SITE)
+    }
+
+    save_site_configurations()
+    return jsonify({'message': 'Site created successfully', 'site_id': site_id}), 201
+
+@app.route('/api/sites/<site_id>', methods=['PUT'])
+def update_site(site_id):
+    """Update an existing site configuration"""
+    data = request.json
+
+    if site_id not in site_configurations:
+        return jsonify({'error': 'Site not found'}), 404
+
+    # Update only provided fields
+    config = site_configurations[site_id]
+    config['site_name'] = data.get('site_name', config.get('site_name', ''))
+    config['location'] = data.get('location', config.get('location', ''))
+    config['responsible_person'] = data.get('responsible_person', config.get('responsible_person', ''))
+    config['contact_email'] = data.get('contact_email', config.get('contact_email', ''))
+    config['contact_phone'] = data.get('contact_phone', config.get('contact_phone', ''))
+    config['active'] = data.get('active', config.get('active', True))
+    config['active_devices'] = data.get('active_devices', config.get('active_devices', EXPECTED_DEVICES_PER_SITE))
+
+    save_site_configurations()
+    return jsonify({'message': 'Site updated successfully', 'site_id': site_id})
+
+@app.route('/api/sites/<site_id>', methods=['DELETE'])
+def delete_site(site_id):
+    """Delete a site configuration"""
+    if site_id not in site_configurations:
+        return jsonify({'error': 'Site not found'}), 404
+
+    del site_configurations[site_id]
+    save_site_configurations()
+    return jsonify({'message': 'Site deleted successfully'})
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
@@ -249,6 +379,10 @@ def handle_disconnect_mqtt():
         emit('mqtt_status', {'status': 'disconnected'})
 
 if __name__ == '__main__':
+    # Load site configurations
+    print("Loading site configurations...")
+    load_site_configurations()
+
     # Connect to MQTT broker on startup
     print("Starting MQTT WatchDog...")
     print(f"Connecting to broker: {mqtt_config['broker']}:{mqtt_config['port']}")

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Configuration - MQTT WatchDog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='config.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Site Configuration <span class="version">v3.0</span></h1>
+            <div class="header-actions">
+                <a href="/" class="btn btn-secondary">Back to Monitor</a>
+            </div>
+        </header>
+
+        <div class="config-container">
+            <div class="config-header">
+                <h2>Manage Sites</h2>
+                <button id="add-site-btn" class="btn btn-primary">+ Add New Site</button>
+            </div>
+
+            <div id="sites-list" class="sites-list">
+                <!-- Sites will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Site Modal -->
+    <div id="site-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Site</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="site-form">
+                    <input type="hidden" id="edit-site-id">
+
+                    <div class="form-group">
+                        <label for="site-id">Site ID *</label>
+                        <input type="text" id="site-id" required placeholder="e.g., 10001">
+                        <small>Must match the site ID in MQTT payloads</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="site-name">Site Name *</label>
+                        <input type="text" id="site-name" required placeholder="e.g., Main Office">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="site-location">Physical Location *</label>
+                        <input type="text" id="site-location" required placeholder="e.g., 123 Main St, City, Country">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="responsible-person">Responsible Person *</label>
+                        <input type="text" id="responsible-person" required placeholder="e.g., John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-email">Contact Email</label>
+                        <input type="email" id="contact-email" placeholder="e.g., john@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-phone">Contact Phone *</label>
+                        <input type="tel" id="contact-phone" required placeholder="e.g., +1234567890">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="site-active" checked>
+                            Site Active
+                        </label>
+                        <small>Inactive sites will not trigger alerts</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Device Status</label>
+                        <div class="device-checkboxes">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="device-checkbox" value="GSM-1" checked>
+                                GSM-1
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="device-checkbox" value="GSM-2" checked>
+                                GSM-2
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="device-checkbox" value="ESP" checked>
+                                ESP
+                            </label>
+                        </div>
+                        <small>Only enabled devices will be monitored for alerts</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Site</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='config.js') }}"></script>
+</body>
+</html>
