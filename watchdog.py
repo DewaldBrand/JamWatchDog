@@ -69,9 +69,11 @@ def on_message(_client, _userdata, msg):
             site_id, device_name = parts
 
             # Initialize site if not exists
-            if site_id not in sites_data:
+            is_new_site = site_id not in sites_data
+            if is_new_site:
                 sites_data[site_id] = {}
                 current_minute_messages[site_id] = set()
+                print(f"NEW SITE DETECTED: {site_id}")
 
             # Update device last seen
             sites_data[site_id][device_name] = {
@@ -82,7 +84,11 @@ def on_message(_client, _userdata, msg):
             # Track for current minute analysis
             current_minute_messages[site_id].add(device_name)
 
-            print(f"[{timestamp}] Site: {site_id} | Device: {device_name}")
+            print(f"[{timestamp}] Site: {site_id} | Device: {device_name} | Current minute: {current_minute_messages[site_id]}")
+
+            # Send immediate status update for new sites
+            if is_new_site:
+                send_current_status()
     except Exception as e:
         print(f"Error parsing payload: {e}")
 
@@ -92,6 +98,40 @@ def on_message(_client, _userdata, msg):
 def on_disconnect(_client, _userdata, _rc):
     print("Disconnected from MQTT Broker")
     socketio.emit('mqtt_status', {'status': 'disconnected'}, namespace='/')
+
+def send_current_status():
+    """Send current status without clearing data (for immediate updates)"""
+    site_statuses = []
+
+    for site_id in sites_data.keys():
+        received_devices = current_minute_messages.get(site_id, set())
+        expected_devices = set(EXPECTED_DEVICES_PER_SITE)
+
+        missing_devices = expected_devices - received_devices
+        missed_count = len(missing_devices)
+
+        # Calculate alert level (0 = all good, 1-3 = missed messages)
+        alert_level = min(missed_count, 3)
+
+        # Color coding based on alert level
+        colors = ['#10b981', '#f59e0b', '#ef4444', '#7f1d1d']  # green, orange, red, dark red
+        color = colors[alert_level]
+
+        site_status = {
+            'site_id': site_id,
+            'alert_level': alert_level,
+            'color': color,
+            'received': list(received_devices),
+            'missing': list(missing_devices),
+            'total_expected': len(expected_devices),
+            'total_received': len(received_devices)
+        }
+
+        site_statuses.append(site_status)
+
+    # Emit update to all clients
+    socketio.emit('site_status_update', {'sites': site_statuses}, namespace='/')
+    print(f"Status update sent: {len(site_statuses)} sites")
 
 def check_site_status():
     """Check each site's status and calculate alert levels"""
@@ -124,13 +164,14 @@ def check_site_status():
         }
 
         site_statuses.append(site_status)
-        print(f"Site {site_id}: Alert Level {alert_level}, Received: {len(received_devices)}/3")
+        print(f"[CHECK] Site {site_id}: Alert Level {alert_level}, Received: {len(received_devices)}/3")
 
     # Emit update to all clients
     socketio.emit('site_status_update', {'sites': site_statuses}, namespace='/')
 
     # Clear current minute tracking
     current_minute_messages = {site_id: set() for site_id in sites_data.keys()}
+    print(f"[CHECK] Minute reset - tracking cleared for next cycle")
 
 def start_monitoring_scheduler():
     """Start the periodic monitoring check"""
